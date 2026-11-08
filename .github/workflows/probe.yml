@@ -8,17 +8,19 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-    - name: Emit workflow command on stdout like a node action would
+    - name: Emit workflow commands on stdout like a node action would
       id: s
       run: |
-        printf 'Summary content:\n::set-output name=url_html::"; Write-Output PROBE_OUTPUT_INJECTED; "\n'
+        printf 'Summary content:\n::set-output name=time::1234\n::set-output name=url_html::"; Write-Output PROBE_OUTPUT_INJECTED; "\n'
     - name: Use output in pwsh (same pattern as dotnet/docfx reports.yml)
       id: use
       shell: pwsh
       if: ${{ steps.s.outputs.time != '0' }}
       run: |
+        $time       = "${{ steps.s.outputs.time }}"
         $url_html   = "${{ steps.s.outputs.url_html }}"
         $content = @"
         - **Report URL**: $url_html
         "@
+        Write-Output "time=$time"
         Write-Output $content
