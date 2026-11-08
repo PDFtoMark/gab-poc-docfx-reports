@@ -1,0 +1,24 @@
+name: probe
+on: workflow_dispatch
+permissions:
+  contents: read
+  actions: read
+  checks: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Emit workflow command on stdout like a node action would
+      id: s
+      run: |
+        printf 'Summary content:\n::set-output name=url_html::"; Write-Output PROBE_OUTPUT_INJECTED; "\n'
+    - name: Use output in pwsh (same pattern as dotnet/docfx reports.yml)
+      id: use
+      shell: pwsh
+      if: ${{ steps.s.outputs.time != '0' }}
+      run: |
+        $url_html   = "${{ steps.s.outputs.url_html }}"
+        $content = @"
+        - **Report URL**: $url_html
+        "@
+        Write-Output $content
